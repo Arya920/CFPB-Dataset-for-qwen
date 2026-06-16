@@ -121,45 +121,84 @@ Jaccard similarity was evaluated as an alternative snapping strategy but proved 
 
 ---
 
+## Training Convergence
+
+| Step | Training Loss | Validation Loss |
+|--------|--------|--------|
+| 100 | 1.7377 | 1.7092 |
+| 200 | 1.6316 | 1.6485 |
+| 300 | 1.6508 | 1.6295 |
+| 400 | 1.6078 | 1.6204 |
+| 500 | 1.6090 | 1.6145 |
+| 600 | 1.6191 | 1.6101 |
+| 700 | 1.5926 | 1.6058 |
+| 800 | 1.6128 | 1.6034 |
+| 900 | 1.6076 | 1.6012 |
+| 1000 | 1.5874 | 1.5997 |
+| 1100 | 1.6001 | 1.5984 |
+
+Validation loss steadily decreased from **1.709 → 1.598**, demonstrating successful adaptation of the base model to the CFPB complaint taxonomy.
+
+---
+
 ## Evaluation Results
 
-Evaluated on 500 held-out test examples from the CFPB dataset. Baseline is the unmodified `Qwen2.5-7B-Instruct` base model with no fine-tuning.
+Evaluated on 250 held-out CFPB complaints.
 
-### Primary Metrics — Structured JSON Extraction
+Baseline refers to the original Qwen2.5-7B-Instruct model without fine-tuning.
 
-| Metric | Baseline | Fine-tuned | Δ |
-|--------|----------|------------|---|
-| Exact JSON Match | 0.0000 | 0.2280 | +0.2280 |
-| Avg Field Accuracy | 0.0030 | 0.5925 | +0.5895 |
-| Micro F1 | 0.0030 | 0.5925 | +0.5895 |
-| Macro F1 | 0.0008 | 0.2395 | +0.2387 |
-| Weighted F1 | 0.0059 | 0.5814 | +0.5755 |
+### Product Classification Performance
 
-**Per-field accuracy:**
+| Metric | Baseline | Fine-Tuned | Improvement |
+|----------|----------|----------|----------|
+| Exact Match | 0.0100 | 0.9080 | +0.8980 |
+| Precision | 0.5180 | 0.9082 | +0.3902 |
+| Recall | 0.0100 | 0.9080 | +0.8980 |
+| F1 Score | 0.0196 | 0.9068 | +0.8872 |
 
-| Field | Baseline | Fine-tuned | Δ |
-|-------|----------|------------|---|
-| product | 0.010 | **0.910** | +0.900 |
-| sub_product | 0.002 | **0.628** | +0.626 |
-| issue | 0.000 | **0.336** | +0.336 |
-| sub_issue | 0.000 | **0.496** | +0.496 |
+### Sub-Product Semantic Similarity
 
-`product` accuracy of 91% is expected — the CFPB product taxonomy has around a dozen top-level categories and the model learns them well. `issue` at 33.6% reflects the genuine difficulty of the field: 80+ canonical strings with overlapping phrasing, many appearing infrequently even in the full training set.
+| Metric | Baseline | Fine-Tuned | Improvement |
+|----------|----------|----------|----------|
+| ROUGE-1 | 0.0041 | 0.7122 | +0.7081 |
+| ROUGE-2 | 0.0030 | 0.6452 | +0.6422 |
+| ROUGE-L | 0.0041 | 0.7122 | +0.7081 |
+| BLEU | 0.0000 | 0.5026 | +0.5026 |
 
-### Secondary Metrics — Generative Quality
+### Issue Semantic Similarity
 
-These metrics measure output fluency and n-gram overlap. They are secondary to the structured metrics above, but confirm the model is generating coherent, well-formed text.
+| Metric | Baseline | Fine-Tuned | Improvement |
+|----------|----------|----------|----------|
+| ROUGE-1 | 0.0018 | 0.4018 | +0.4000 |
+| ROUGE-2 | 0.0000 | 0.3463 | +0.3463 |
+| ROUGE-L | 0.0018 | 0.4013 | +0.3995 |
+| BLEU | 0.0000 | 0.3368 | +0.3368 |
 
-| Metric | Baseline | Fine-tuned | Δ |
-|--------|----------|------------|---|
-| ROUGE-1 | 0.4592 | 0.7035 | +0.2443 |
-| ROUGE-2 | 0.2523 | 0.6049 | +0.3526 |
-| ROUGE-L | 0.4258 | 0.6915 | +0.2657 |
-| BLEU | 0.0003 | 0.1905 | +0.1902 |
-| SacreBLEU | 19.77 | 65.07 | +45.30 |
-| METEOR | 0.1133 | 0.6309 | +0.5176 |
+### Sub-Issue Semantic Similarity
 
-The SacreBLEU jump from 19.77 to 65.07 and METEOR from 0.11 to 0.63 indicate the fine-tuned model is generating outputs that are not just structurally similar to references, but lexically aligned — which for this task means using the correct canonical CFPB terminology consistently.
+| Metric | Baseline | Fine-Tuned | Improvement |
+|----------|----------|----------|----------|
+| ROUGE-1 | 0.0004 | 0.5215 | +0.5211 |
+| ROUGE-2 | 0.0000 | 0.4895 | +0.4895 |
+| ROUGE-L | 0.0004 | 0.5207 | +0.5203 |
+| BLEU | 0.0000 | 0.2283 | +0.2283 |
+
+---
+
+## Final Results Summary
+
+| Category | Base Qwen2.5-7B | Fine-Tuned CFPB Model |
+|-----------|----------------|----------------------|
+| Product Classification (Exact Match) | 1.0% | 90.8% |
+| Product F1 Score | 1.96% | 90.7% |
+| Sub-Product ROUGE-L | 0.004 | 0.712 |
+| Issue ROUGE-L | 0.002 | 0.401 |
+| Sub-Issue ROUGE-L | 0.000 | 0.521 |
+| Output Structure | Inconsistent | Reliable CFPB JSON |
+| Taxonomy Alignment | Poor | High |
+| Training Time | ~45 Minutes | ~45 Minutes |
+| Inference Latency | Baseline | Near Identical |
+| Additional GPU Memory | Baseline | ~50 MB Adapter |
 
 ---
 
@@ -173,7 +212,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 base_model_name = "Qwen/Qwen2.5-7B-Instruct"
-adapter_path    = "your-hf-username/qwen2.5-7b-cfpb-complaint-categorisation"
+adapter_path    = "aryachakraborty/arya-cfpb-qwen_2.5-7b-lora-V2"
 
 tokenizer = AutoTokenizer.from_pretrained(adapter_path)
 base      = AutoModelForCausalLM.from_pretrained(
