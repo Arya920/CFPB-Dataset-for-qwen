@@ -12,6 +12,14 @@ The result is predictable: complaints get routed to the wrong team, require manu
 
 This model addresses that by treating complaint categorisation as a **structured generation task** — the model reads the complaint narrative and produces all four required ticket fields in a single inference step.
 
+
+### Code guide 
+
+- CFPB.ipynb : Raw data loading and converting it into Qwen trainable chat template
+- Qwen2_5-7B-IT-CFPB-13k-model-training.ipynb : Fine tune & evaluation code for  Qwen2_5-7B-IT model
+- CFPB_Demo.ipynb : Final Demo code file for Inference & comparison.
+
+
 ---
 
 ## What the Model Does
